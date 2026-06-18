@@ -1,0 +1,131 @@
+import { GRUPOS } from './data'
+
+function calcularPuestosGrupos(porra, solucion) {
+  let puntos = 0
+  for (const grupo of Object.keys(GRUPOS)) {
+    const p1 = porra[`grupo_${grupo}_1`]
+    const p2 = porra[`grupo_${grupo}_2`]
+    const p3 = porra[`grupo_${grupo}_3`]
+    const s1 = solucion[`grupo_${grupo}_1`]
+    const s2 = solucion[`grupo_${grupo}_2`]
+    const s3 = solucion[`grupo_${grupo}_3`]
+    if (p1 === s1) puntos++
+    if (p2 === s2) puntos++
+    if (p3 === s3) puntos++
+  }
+  return puntos
+}
+
+function getClasificados16(porra) {
+  const clasificados = []
+  for (const grupo of Object.keys(GRUPOS)) {
+    clasificados.push(porra[`grupo_${grupo}_1`])
+    clasificados.push(porra[`grupo_${grupo}_2`])
+  }
+  for (let i = 0; i < 8; i++) {
+    const t = porra[`tercero_${i}`]
+    if (t) clasificados.push(t)
+  }
+  return clasificados.filter(Boolean)
+}
+
+function getClasificados16Sol(solucion) {
+  const clasificados = []
+  for (const grupo of Object.keys(GRUPOS)) {
+    clasificados.push(solucion[`grupo_${grupo}_1`])
+    clasificados.push(solucion[`grupo_${grupo}_2`])
+  }
+  for (let i = 0; i < 8; i++) {
+    const t = solucion[`tercero_${i}`]
+    if (t) clasificados.push(t)
+  }
+  return clasificados.filter(Boolean)
+}
+
+function calcularClasificados16(porra, solucion) {
+  const pClasif = new Set(getClasificados16(porra))
+  const sClasif = new Set(getClasificados16Sol(solucion))
+  let puntos = 0
+  for (const equipo of pClasif) {
+    if (sClasif.has(equipo)) puntos++
+  }
+  return puntos
+}
+
+function getRonda(prediccion, ronda) {
+  const equipos = []
+  for (let i = 0; i < 32; i++) {
+    const v = prediccion[`${ronda}_${i}`]
+    if (v) equipos.push(v)
+  }
+  return equipos.filter(Boolean)
+}
+
+function calcularRonda(porra, solucion, ronda, puntosPorEquipo) {
+  const pEquipos = new Set(getRonda(porra, ronda))
+  const sEquipos = new Set(getRonda(solucion, ronda))
+  let puntos = 0
+  for (const equipo of pEquipos) {
+    if (sEquipos.has(equipo)) puntos += puntosPorEquipo
+  }
+  return puntos
+}
+
+function calcularPremio(porra, solucion, key, puntos) {
+  if (!porra[key] || !solucion[key]) return 0
+  return porra[key] === solucion[key] ? puntos : 0
+}
+
+function calcularEnfrentamientosCuartos(porra, solucion) {
+  let puntos = 0
+  for (let i = 0; i < 4; i++) {
+    const pA = porra[`cuartos_${i}_a`]
+    const pB = porra[`cuartos_${i}_b`]
+    const sA = solucion[`cuartos_${i}_a`]
+    const sB = solucion[`cuartos_${i}_b`]
+    if (!pA || !pB || !sA || !sB) continue
+    const pPair = new Set([pA, pB])
+    const sPair = new Set([sA, sB])
+    if ([...pPair].every(e => sPair.has(e))) puntos += 8
+  }
+  return puntos
+}
+
+function calcularEnfrentamientosSemis(porra, solucion) {
+  let puntos = 0
+  for (let i = 0; i < 2; i++) {
+    const pA = porra[`semis_${i}_a`]
+    const pB = porra[`semis_${i}_b`]
+    const sA = solucion[`semis_${i}_a`]
+    const sB = solucion[`semis_${i}_b`]
+    if (!pA || !pB || !sA || !sB) continue
+    const pPair = new Set([pA, pB])
+    const sPair = new Set([sA, sB])
+    if ([...pPair].every(e => sPair.has(e))) puntos += 16
+  }
+  return puntos
+}
+
+export function calcularPuntuacion(porra, solucion) {
+  if (!porra || !solucion) return null
+  const desglose = {
+    puestos_grupos: calcularPuestosGrupos(porra, solucion),
+    clasificados_16: calcularClasificados16(porra, solucion),
+    clasificados_8: calcularRonda(porra, solucion, 'octavos', 2),
+    clasificados_4: calcularRonda(porra, solucion, 'cuartos', 4),
+    clasificados_semi: calcularRonda(porra, solucion, 'semis', 8),
+    finalistas: calcularRonda(porra, solucion, 'final', 16),
+    campeon: calcularPremio(porra, solucion, 'campeon', 32),
+    tercer_clasificado: calcularPremio(porra, solucion, 'tercer_clasificado', 16),
+    balon_oro: calcularPremio(porra, solucion, 'balon_oro', 32),
+    bota_oro: calcularPremio(porra, solucion, 'bota_oro', 32),
+    guante_oro: calcularPremio(porra, solucion, 'guante_oro', 32),
+    mejor_joven: calcularPremio(porra, solucion, 'mejor_joven', 32),
+    juego_limpio: calcularPremio(porra, solucion, 'juego_limpio', 32),
+    gol_torneo: calcularPremio(porra, solucion, 'gol_torneo', 32),
+    enfrentamientos_cuartos: calcularEnfrentamientosCuartos(porra, solucion),
+    enfrentamientos_semis: calcularEnfrentamientosSemis(porra, solucion),
+  }
+  const total = Object.values(desglose).reduce((a, b) => a + b, 0)
+  return { desglose, total }
+}
