@@ -35,7 +35,7 @@ export default function AdminPage() {
   const [tab, setTab] = useState('00000000-0000-0000-0000-000000000000')
 
   function login() {
-    if (password === 'BuenaPorraQatarusa223') { setAutenticado(true); cargarDatos() }
+    if (password === 'aupazaragoza') { setAutenticado(true); cargarDatos() }
     else setErrorAuth(true)
   }
 
