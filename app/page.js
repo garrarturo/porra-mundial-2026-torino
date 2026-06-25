@@ -179,7 +179,7 @@ export default function Home() {
   </h2>
   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
     {[
-      { emoji: '🏟️', titulo: 'Fase de grupos', puntos: '36 pts', desc: '1 punto por cada puesto correcto (1º, 2º y 3º) en cada uno de los 12 grupos.' },
+      { emoji: '🏟️', titulo: 'Fase de grupos', puntos: '36 pts', desc: '1 punto por cada puesto correcto (un grupo perfecto son 3 puntos) en cada uno de los 12 grupos.' },
       { emoji: '🎟️', 'titulo': 'Clasificados a 1/16', puntos: '32 pts', desc: '1 punto por cada uno de los 32 clasificados que aciertes (24 primeros/segundos + 8 mejores terceros).' },
       { emoji: '⚔️', titulo: 'Octavos de final', puntos: '32 pts', desc: '2 puntos por cada uno de los 16 clasificados a octavos que aciertes.' },
       { emoji: '🏅', titulo: 'Cuartos de final', puntos: '32+32 pts', desc: '4 puntos por cada uno de los 8 clasificados a cuartos. Bonus: 8 pts extra si aciertas el enfrentamiento exacto en el lado correcto del cuadro.' },
@@ -337,17 +337,21 @@ function DesglosePuntos({ puntuacion, porra, solucion }) {
 
   const categorias = [
     {
-      key: 'puestos_grupos', label: 'Grupos', max: 36,
-      detalle: () => GRUPOS_KEYS.map(g => {
-        const p1 = porra[`grupo_${g}_1`], s1 = solucion?.[`grupo_${g}_1`]
-        const p2 = porra[`grupo_${g}_2`], s2 = solucion?.[`grupo_${g}_2`]
-        const p3 = porra[`grupo_${g}_3`], s3 = solucion?.[`grupo_${g}_3`]
-        return [
-          { nodo: <span>Grupo {g} — 1º: <Equipo nombre={p1} /></span>, ok: p1 && p1 === s1 },
-          { nodo: <span>Grupo {g} — 2º: <Equipo nombre={p2} /></span>, ok: p2 && p2 === s2 },
-          { nodo: <span>Grupo {g} — 3º: <Equipo nombre={p3} /></span>, ok: p3 && p3 === s3 },
-        ]
-      }).flat()
+  key: 'puestos_grupos', label: 'Grupos', max: 36,
+  detalle: () => GRUPOS_KEYS.map(g => {
+    const equipos = GRUPOS[g]
+    const p1 = porra[`grupo_${g}_1`], s1 = solucion?.[`grupo_${g}_1`]
+    const p2 = porra[`grupo_${g}_2`], s2 = solucion?.[`grupo_${g}_2`]
+    const p3 = porra[`grupo_${g}_3`], s3 = solucion?.[`grupo_${g}_3`]
+    const p4 = equipos.find(e => e !== p1 && e !== p2 && e !== p3)
+    const s4 = solucion ? equipos.find(e => e !== s1 && e !== s2 && e !== s3) : null
+    return [
+      { nodo: <span>Grupo {g} — 1º: <Equipo nombre={p1} /></span>, ok: p1 && p1 === s1 },
+      { nodo: <span>Grupo {g} — 2º: <Equipo nombre={p2} /></span>, ok: p2 && p2 === s2 },
+      { nodo: <span>Grupo {g} — 3º: <Equipo nombre={p3} /></span>, ok: p3 && p3 === s3 },
+      { nodo: <span>Grupo {g} — 4º: <Equipo nombre={p4} /></span>, ok: p4 && p4 === s4 },
+    ]
+  }).flat()
     },
     {
       key: 'clasificados_16', label: '1/16', max: 32,
